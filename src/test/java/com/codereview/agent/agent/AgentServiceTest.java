@@ -53,7 +53,23 @@ class AgentServiceTest {
 
         long checks = result.steps().stream().filter(s -> s.tool().equals("check_java_pitfalls")).count();
         assertThat(checks).isEqualTo(3);
-        assertThat(result.summary()).contains("Skipped 2 lowest-risk file(s)");
+        assertThat(result.agentNotes()).contains("Skipped 2 lowest-risk file(s)");
+        assertThat(result.summary()).isEqualTo("No issues found. Checked 3 of 5 changed file(s).");
+    }
+
+    @Test
+    void summaryComesFromFindingsNotFromTheModel() {
+        String payment = "src/main/java/com/shop/payments/PaymentService.java";
+        Planner exaggerates = (pr, history) -> history.isEmpty()
+                ? AgentAction.callTool("check the risky file", "check_java_pitfalls", Map.of("path", payment))
+                : AgentAction.finish("done", "Found 99 critical issues!");
+        AgentService agent = new AgentService(tools, exaggerates, 10);
+
+        ReviewResult result = agent.review(demoPr);
+
+        assertThat(result.summary())
+                .isEqualTo("Found 3 issue(s) in 1 file(s): PaymentService.java (3). Checked 1 of 3 changed file(s).");
+        assertThat(result.agentNotes()).isEqualTo("Found 99 critical issues!");
     }
 
     @Test

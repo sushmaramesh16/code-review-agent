@@ -27,7 +27,10 @@ class ReviewControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", startsWith("/reviews/")))
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.findings.length()").value(4));
+                .andExpect(jsonPath("$.findings.length()").value(4))
+                .andExpect(jsonPath("$.summary").value(
+                        "Found 4 issue(s) in 2 file(s): PaymentService.java (3), OrderController.java (1). "
+                                + "Checked 3 of 3 changed file(s)."));
     }
 
     @Test

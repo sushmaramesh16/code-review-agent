@@ -75,6 +75,10 @@ which lines the pull request added, and only reports issues on those lines. Rule
 null-unsafe `equals`, empty catch, overly broad catch, unclosed streams, `printStackTrace()`,
 and `System.out` logging.
 
+Every review has two summaries: `summary` is computed by Java from the recorded findings,
+so its counts are always correct, and `agentNotes` holds the planner's own words. In testing,
+the LLM planner once miscounted findings in its notes, which is exactly why facts never come from it.
+
 The planner only **proposes** actions. `AgentService` validates the tool name,
 runs it, records the result, and stops after `agent.max-steps`.
 

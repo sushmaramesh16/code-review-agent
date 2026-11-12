@@ -2,6 +2,7 @@ package com.codereview.agent.agent;
 
 import com.codereview.agent.model.AgentAction;
 import com.codereview.agent.model.AgentStep;
+import com.codereview.agent.model.Finding;
 import com.codereview.agent.model.PullRequest;
 import com.codereview.agent.model.ReviewResult;
 import com.codereview.agent.model.ReviewStatus;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -44,12 +46,12 @@ public class AgentService {
     public ReviewResult review(PullRequest pullRequest) {
         ReviewContext context = new ReviewContext(pullRequest);
         List<AgentStep> steps = new ArrayList<>();
-        String summary = null;
+        String agentNotes = null;
 
         for (int i = 1; i <= maxSteps; i++) {
             AgentAction action = planner.nextAction(pullRequest, List.copyOf(steps));
             if (action.isFinish()) {
-                summary = action.summary();
+                agentNotes = action.summary() == null ? "" : action.summary();
                 break;
             }
 
@@ -60,13 +62,47 @@ public class AgentService {
             log.info("Step {}: {} {}", step.number(), step.tool(), step.args());
         }
 
-        ReviewStatus status = summary == null ? ReviewStatus.STEP_LIMIT_REACHED : ReviewStatus.COMPLETED;
-        if (summary == null) {
-            summary = "Stopped after reaching the limit of " + maxSteps + " steps.";
+        ReviewStatus status = agentNotes == null ? ReviewStatus.STEP_LIMIT_REACHED : ReviewStatus.COMPLETED;
+        if (agentNotes == null) {
+            agentNotes = "Stopped after reaching the limit of " + maxSteps + " steps.";
         }
 
+        List<Finding> findings = context.findings();
         return new ReviewResult(UUID.randomUUID().toString(), pullRequest.number(), pullRequest.title(),
-                status, summary, context.findings(), steps, Instant.now());
+                status, groundedSummary(pullRequest, findings, steps), agentNotes, findings, steps, Instant.now());
+    }
+
+    /**
+     * Builds the summary from what the tools actually recorded, never from the model's words.
+     * Example: "Found 4 issue(s) in 2 file(s): PaymentService.java (3), OrderController.java (1).
+     *           Checked 3 of 3 changed file(s)."
+     */
+    static String groundedSummary(PullRequest pullRequest, List<Finding> findings, List<AgentStep> steps) {
+        long checked = steps.stream()
+                .filter(step -> "check_java_pitfalls".equals(step.tool()))
+                .filter(step -> !step.observation().startsWith("Error"))
+                .map(step -> step.args().get("path"))
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
+        String coverage = "Checked " + checked + " of " + pullRequest.files().size() + " changed file(s).";
+
+        if (findings.isEmpty()) {
+            return "No issues found. " + coverage;
+        }
+
+        Map<String, Long> perFile = findings.stream().collect(Collectors.groupingBy(
+                finding -> fileName(finding.path()), LinkedHashMap::new, Collectors.counting()));
+        String breakdown = perFile.entrySet().stream()
+                .map(entry -> entry.getKey() + " (" + entry.getValue() + ")")
+                .collect(Collectors.joining(", "));
+
+        return "Found " + findings.size() + " issue(s) in " + perFile.size() + " file(s): "
+                + breakdown + ". " + coverage;
+    }
+
+    private static String fileName(String path) {
+        return path.substring(path.lastIndexOf('/') + 1);
     }
 
     private String runTool(AgentAction action, ReviewContext context) {

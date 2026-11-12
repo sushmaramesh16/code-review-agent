@@ -139,6 +139,8 @@ public class OllamaPlanner implements Planner {
                 - Run check_java_pitfalls on files from the riskiest down. It only reports issues on lines
                   the pull request added, and it is the only tool that records findings.
                 - Never claim a problem that a tool did not report.
+                - Your summary is shown as notes next to a summary the system computes itself,
+                  so don't restate counts of issues or files; describe what matters most instead.
                 - Finish once the risky files have been checked.
                 """.formatted(toolList);
     }
