@@ -134,8 +134,9 @@ public class OllamaPlanner implements Planner {
                 {"reasoning": "why you are done", "action": "finish", "summary": "<2-3 sentence review summary>"}
 
                 Guidelines:
-                - Start with list_changed_files.
-                - Use predict_risk to decide which files deserve a closer look.
+                - Start with list_changed_files, then assess_change_risk for the whole change.
+                - If the change risk is 0.7 or more, check every file. Otherwise use predict_risk
+                  to decide which files deserve a closer look.
                 - Run check_java_pitfalls on files from the riskiest down. It only reports issues on lines
                   the pull request added, and it is the only tool that records findings.
                 - Never claim a problem that a tool did not report.

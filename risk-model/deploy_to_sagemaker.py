@@ -42,7 +42,7 @@ SAMPLES = [
 def session():
     s = boto3.session.Session()
     if s.region_name not in SKLEARN_IMAGES:
-        sys.exit(f"Region is {s.region_name!r}. Run: aws configure set region us-east-1")
+        sys.exit(f"Region is {s.region_name!r}. Run: aws configure set region <your project's region>")
     return s
 
 
@@ -131,6 +131,8 @@ def deploy():
         "ModelDataUrl": f"s3://{bucket}/{key}",
         "Environment": {"SAGEMAKER_PROGRAM": "inference.py",
                         "SAGEMAKER_SUBMIT_DIRECTORY": "/opt/ml/model/code",
+                        # Serverless runs as a non-root user, so the container's pip install of our
+                        # script lands in a user folder Python doesn't search. Import it directly instead.
                         "PYTHONPATH": "/opt/ml/model/code"},
     })
     sm.create_endpoint_config(EndpointConfigName=name, ProductionVariants=[{

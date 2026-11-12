@@ -4,8 +4,8 @@ An AI agent that reviews Java pull requests. It decides which files look risky,
 investigates them with tools, and reports findings tied to exact lines, along with
 a step-by-step trace of everything it did.
 
-**Status: Step 3 of 6.** Spring Boot API + agent loop, reviewing the built-in demo pull request
-or any real public GitHub pull request. SageMaker, Lambda, S3, and DynamoDB come in later steps.
+**Status: feature-complete.** Spring Boot API, agent loop (rule-based or a local LLM), real GitHub
+pull requests, and a trained bug-risk model served from a SageMaker serverless endpoint.
 
 ## Run it
 
@@ -60,12 +60,29 @@ ollama pull qwen2.5:7b
 mvn spring-boot:run -Dspring-boot.run.arguments=--agent.planner=ollama
 ```
 
+## Trained risk model on SageMaker
+
+The `assess_change_risk` tool asks a gradient-boosted model, trained on ~75,000 real Apache Java
+commits (ApacheJIT), how likely the whole pull request is to introduce a bug. On commits from later
+years than it trained on, reviewing the riskiest 20% of changes catches about half of all
+bug-inducing commits, versus about 22% for a lines-added heuristic. High-risk changes (0.7 or more)
+get every file checked. See `risk-model/` for training and deployment.
+
+```bash
+aws login
+mvn spring-boot:run -Dspring-boot.run.arguments=--risk.model=sagemaker
+```
+
+If SageMaker can't be reached (expired session, endpoint deleted), the app falls back to the
+heuristic and labels the result `heuristic fallback (SageMaker unavailable)` instead of failing.
+
 ## How it's organized
 
 ```
 api/      HTTP layer: controllers, request validation, error handling
 agent/    AgentService (the loop), Planner (the brain), ReviewContext (shared state)
-tools/    What the agent may do: list files, read diffs/files, predict risk, check pitfalls
+tools/    What the agent may do: list files, assess change risk, read diffs/files, rank files, check pitfalls
+risk/     Change-risk models: heuristic, or the trained model on SageMaker (with fallback)
 source/   Where pull requests come from: built-in demo data, or the GitHub REST API
 model/    Plain data records
 ```

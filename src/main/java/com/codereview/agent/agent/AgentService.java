@@ -6,6 +6,7 @@ import com.codereview.agent.model.Finding;
 import com.codereview.agent.model.PullRequest;
 import com.codereview.agent.model.ReviewResult;
 import com.codereview.agent.model.ReviewStatus;
+import com.codereview.agent.risk.ChangeRisk;
 import com.codereview.agent.tools.Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,8 +71,8 @@ public class AgentService {
 
         List<Finding> findings = context.findings();
         return new ReviewResult(UUID.randomUUID().toString(), pullRequest.number(), pullRequest.title(),
-                status, groundedSummary(pullRequest, findings, steps), agentNotes, pullRequest.stats(),
-                findings, steps, Instant.now());
+                status, groundedSummary(pullRequest, findings, steps, context.changeRisk()), agentNotes,
+                pullRequest.stats(), context.changeRisk(), findings, steps, Instant.now());
     }
 
     /**
@@ -78,7 +80,8 @@ public class AgentService {
      * Example: "Found 4 issue(s) in 2 file(s): PaymentService.java (3), OrderController.java (1).
      *           Checked 3 of 3 changed file(s)."
      */
-    static String groundedSummary(PullRequest pullRequest, List<Finding> findings, List<AgentStep> steps) {
+    static String groundedSummary(PullRequest pullRequest, List<Finding> findings, List<AgentStep> steps,
+                                  ChangeRisk changeRisk) {
         long checked = steps.stream()
                 .filter(step -> "check_java_pitfalls".equals(step.tool()))
                 .filter(step -> !step.observation().startsWith("Error"))
@@ -87,6 +90,10 @@ public class AgentService {
                 .distinct()
                 .count();
         String coverage = "Checked " + checked + " of " + pullRequest.files().size() + " changed file(s).";
+        if (changeRisk != null) {
+            coverage += String.format(Locale.ROOT, " Estimated change risk: %.2f (%s).",
+                    changeRisk.score(), changeRisk.source());
+        }
 
         if (findings.isEmpty()) {
             return "No issues found. " + coverage;

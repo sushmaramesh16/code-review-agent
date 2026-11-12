@@ -33,7 +33,8 @@ class ReviewControllerTest {
                 .andExpect(jsonPath("$.changeStats.subsystems").value(1))
                 .andExpect(jsonPath("$.summary").value(
                         "Found 4 issue(s) in 2 file(s): PaymentService.java (3), OrderController.java (1). "
-                                + "Checked 3 of 3 changed file(s)."));
+                                + "Checked 3 of 3 changed file(s). Estimated change risk: 0.50 (heuristic)."))
+                .andExpect(jsonPath("$.changeRisk.source").value("heuristic"));
     }
 
     @Test

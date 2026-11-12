@@ -9,10 +9,9 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Scores how likely a changed file is to contain a bug, from 0.0 to 1.0.
- *
- * For now this is a simple heuristic. In step 4 it will call a model
- * hosted on a SageMaker serverless endpoint instead, with the same tool name and output.
+ * Ranks the files inside one pull request so the riskiest get checked first, from 0.0 to 1.0.
+ * A simple, explainable heuristic. The trained model scores the WHOLE change instead
+ * (see AssessChangeRiskTool), because that is the level its training data was labeled at.
  */
 @Component
 public class PredictRiskTool implements Tool {
@@ -52,7 +51,7 @@ public class PredictRiskTool implements Tool {
 
         return String.format(Locale.ROOT,
                 "risk=%.2f for %s (added lines: %d, sensitive area: %s, controller: %s). "
-                        + "Heuristic placeholder until the SageMaker model is connected.",
+                        + "File-priority heuristic; the trained model scores the whole change via assess_change_risk.",
                 risk, path, added, sensitive ? "yes" : "no", controller ? "yes" : "no");
     }
 }
