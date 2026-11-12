@@ -1,3 +1,8 @@
-pandas>=2.0
-scikit-learn>=1.4
-joblib>=1.3
+# Pinned to match SageMaker's scikit-learn 1.4-2 container exactly, so the saved
+# model loads the same way in the cloud as it does here (environment parity).
+scikit-learn==1.4.2
+numpy==2.1.3
+scipy==1.15.3
+joblib==1.5.2
+pandas==2.2.3
+boto3>=1.40

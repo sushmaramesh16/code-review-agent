@@ -10,6 +10,7 @@
   ],
   "trained_on": "ApacheJIT apachejit_train.csv (2003-2016)",
   "tested_on": "ApacheJIT apachejit_test_large.csv (last 3 years)",
+  "sklearn_version": "1.4.2",
   "note": "Trained on a balanced set, so treat outputs as risk rankings, not exact probabilities.",
   "results": [
     {
@@ -27,8 +28,8 @@
     {
       "model": "boosted trees, diff-only features",
       "roc_auc": 0.792,
-      "pr_auc": 0.476,
-      "bugs_in_top_20pct": 0.495
+      "pr_auc": 0.474,
+      "bugs_in_top_20pct": 0.491
     },
     {
       "model": "logistic, diff + history features",
@@ -38,9 +39,9 @@
     },
     {
       "model": "boosted trees, diff + history features",
-      "roc_auc": 0.806,
-      "pr_auc": 0.501,
-      "bugs_in_top_20pct": 0.503
+      "roc_auc": 0.805,
+      "pr_auc": 0.5,
+      "bugs_in_top_20pct": 0.507
     }
   ]
 }

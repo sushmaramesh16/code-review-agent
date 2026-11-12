@@ -18,6 +18,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+import sklearn
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, roc_auc_score
@@ -115,6 +116,7 @@ def main() -> None:
         "features": best_features,
         "trained_on": "ApacheJIT apachejit_train.csv (2003-2016)",
         "tested_on": "ApacheJIT apachejit_test_large.csv (last 3 years)",
+        "sklearn_version": sklearn.__version__,
         "note": "Trained on a balanced set, so treat outputs as risk rankings, not exact probabilities.",
         "results": results,
     }

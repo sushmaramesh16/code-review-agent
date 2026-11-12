@@ -4,3 +4,5 @@ target/
 .DS_Store
 risk-model/.venv/
 risk-model/apachejit/
+risk-model/build/
+risk-model/.venv-sm/
