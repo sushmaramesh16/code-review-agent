@@ -26,6 +26,7 @@ class ChangedFileTest {
         assertThat(file.hasPatch()).isTrue();
         assertThat(file.addedLineNumbers()).containsExactly(2, 11);
         assertThat(file.addedLines()).isEqualTo(2);
+        assertThat(file.deletedLines()).isEqualTo(1);
     }
 
     @Test

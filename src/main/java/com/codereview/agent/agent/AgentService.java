@@ -69,7 +69,8 @@ public class AgentService {
 
         List<Finding> findings = context.findings();
         return new ReviewResult(UUID.randomUUID().toString(), pullRequest.number(), pullRequest.title(),
-                status, groundedSummary(pullRequest, findings, steps), agentNotes, findings, steps, Instant.now());
+                status, groundedSummary(pullRequest, findings, steps), agentNotes, pullRequest.stats(),
+                findings, steps, Instant.now());
     }
 
     /**

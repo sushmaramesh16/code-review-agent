@@ -18,6 +18,20 @@ public record ChangedFile(String path, String diff, String content) {
         return addedLineNumbers().size();
     }
 
+    /** Counts lines the pull request deleted ("-" lines inside hunks, not the "---" header). */
+    public int deletedLines() {
+        int deleted = 0;
+        boolean inHunk = false;
+        for (String line : diff.lines().toList()) {
+            if (HUNK.matcher(line).find()) {
+                inHunk = true;
+            } else if (inHunk && line.startsWith("-")) {
+                deleted++;
+            }
+        }
+        return deleted;
+    }
+
     /** True if the diff has at least one hunk, so we know exactly which lines changed. */
     public boolean hasPatch() {
         return diff.lines().anyMatch(line -> HUNK.matcher(line).find());

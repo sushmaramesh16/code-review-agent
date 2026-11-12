@@ -1,5 +1,6 @@
 package com.codereview.agent.source;
 
+import com.codereview.agent.model.ChangeStats;
 import com.codereview.agent.model.ChangedFile;
 import com.codereview.agent.model.PullRequest;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,9 +52,13 @@ public class GitHubPullRequestSource {
                     .body(JsonNode.class);
 
             List<ChangedFile> changed = new ArrayList<>();
+            List<ChangeStats.FileChurn> allChurn = new ArrayList<>();
             if (files != null) {
                 for (JsonNode file : files) {
                     String path = file.path("filename").asText();
+                    // Every file counts toward the change stats, Java or not, like the training data.
+                    allChurn.add(new ChangeStats.FileChurn(path,
+                            file.path("additions").asInt(0), file.path("deletions").asInt(0)));
                     boolean removed = "removed".equals(file.path("status").asText());
                     if (!path.endsWith(".java") || removed) {
                         continue;
@@ -68,7 +73,7 @@ public class GitHubPullRequestSource {
 
             String title = owner + "/" + repo + ": "
                     + (pr == null ? "(untitled)" : pr.path("title").asText("(untitled)"));
-            return Optional.of(new PullRequest(number, title, changed));
+            return Optional.of(new PullRequest(number, title, changed, ChangeStats.of(allChurn)));
 
         } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();

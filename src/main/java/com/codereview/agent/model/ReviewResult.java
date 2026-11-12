@@ -10,6 +10,6 @@ import java.util.List;
  * agentNotes - the planner's own closing words. Useful context, but never trusted for facts.
  */
 public record ReviewResult(String id, int prNumber, String prTitle, ReviewStatus status,
-                           String summary, String agentNotes, List<Finding> findings,
+                           String summary, String agentNotes, ChangeStats changeStats, List<Finding> findings,
                            List<AgentStep> steps, Instant createdAt) {
 }

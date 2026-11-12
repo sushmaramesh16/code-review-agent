@@ -29,10 +29,10 @@ class GitHubPullRequestSourceTest {
         server.expect(requestTo("https://api.github.com/repos/acme/shop/pulls/7/files?per_page=100"))
                 .andRespond(withSuccess("""
                         [
-                          {"filename": "src/Checkout.java", "status": "modified",
+                          {"filename": "src/Checkout.java", "status": "modified", "additions": 1, "deletions": 0,
                            "patch": "@@ -1,1 +1,2 @@\\n class Checkout {\\n+  int total;",
                            "contents_url": "https://api.github.com/repos/acme/shop/contents/src/Checkout.java?ref=abc"},
-                          {"filename": "README.md", "status": "modified", "patch": "",
+                          {"filename": "README.md", "status": "modified", "additions": 2, "deletions": 1, "patch": "",
                            "contents_url": "https://api.github.com/repos/acme/shop/contents/README.md?ref=abc"}
                         ]
                         """, MediaType.APPLICATION_JSON));
@@ -45,6 +45,10 @@ class GitHubPullRequestSourceTest {
         assertThat(pr.files()).extracting(ChangedFile::path).containsExactly("src/Checkout.java");
         assertThat(pr.files().get(0).addedLines()).isEqualTo(1);
         assertThat(pr.files().get(0).content()).contains("int total;");
+        // Stats cover ALL changed files (README too), like the model's training data.
+        assertThat(pr.stats().linesAdded()).isEqualTo(3);
+        assertThat(pr.stats().linesDeleted()).isEqualTo(1);
+        assertThat(pr.stats().files()).isEqualTo(2);
         server.verify();
     }
 
