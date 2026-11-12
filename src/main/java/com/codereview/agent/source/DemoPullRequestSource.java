@@ -31,7 +31,7 @@ public class DemoPullRequestSource implements PullRequestSource {
                 """
                 --- a/src/main/java/com/shop/payments/PaymentService.java
                 +++ b/src/main/java/com/shop/payments/PaymentService.java
-                @@ -9,3 +9,17 @@ public class PaymentService {
+                @@ -8,3 +8,17 @@ public class PaymentService {
                          this.gateway = gateway;
                      }
                 +
@@ -82,7 +82,7 @@ public class DemoPullRequestSource implements PullRequestSource {
                 """
                 --- a/src/main/java/com/shop/orders/OrderController.java
                 +++ b/src/main/java/com/shop/orders/OrderController.java
-                @@ -10,3 +10,9 @@ public class OrderController {
+                @@ -11,3 +11,9 @@ public class OrderController {
                          this.orderService = orderService;
                      }
                 +

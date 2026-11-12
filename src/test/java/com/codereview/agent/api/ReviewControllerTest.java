@@ -27,7 +27,7 @@ class ReviewControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", startsWith("/reviews/")))
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.findings.length()").value(3));
+                .andExpect(jsonPath("$.findings.length()").value(4));
     }
 
     @Test

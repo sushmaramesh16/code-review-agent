@@ -1,6 +1,7 @@
 package com.codereview.agent.agent;
 
 import com.codereview.agent.model.AgentAction;
+import com.codereview.agent.model.ChangedFile;
 import com.codereview.agent.model.Finding;
 import com.codereview.agent.model.PullRequest;
 import com.codereview.agent.model.ReviewResult;
@@ -14,6 +15,7 @@ import com.codereview.agent.tools.PredictRiskTool;
 import com.codereview.agent.tools.Tool;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -26,16 +28,32 @@ class AgentServiceTest {
     private final PullRequest demoPr = new DemoPullRequestSource().find(1).orElseThrow();
 
     @Test
-    void findsPlantedBugsAndSkipsLowRiskFile() {
-        AgentService agent = new AgentService(tools, new RuleBasedPlanner(), 12);
+    void findsPlantedBugsOnNewLines() {
+        AgentService agent = new AgentService(tools, new RuleBasedPlanner(), 40);
 
         ReviewResult result = agent.review(demoPr);
 
         assertThat(result.status()).isEqualTo(ReviewStatus.COMPLETED);
         assertThat(result.findings()).extracting(Finding::rule)
-                .containsExactlyInAnyOrder("STRING_EQUALITY", "EMPTY_CATCH", "SYSTEM_OUT");
+                .containsExactlyInAnyOrder("STRING_EQUALITY", "EMPTY_CATCH", "BROAD_CATCH", "SYSTEM_OUT");
         assertThat(result.findings()).extracting(Finding::path)
                 .noneMatch(path -> path.endsWith("UserUtils.java"));
+    }
+
+    @Test
+    void checksSmallFilesTooButRespectsTheBudget() {
+        List<ChangedFile> files = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+            files.add(new ChangedFile("F" + i + ".java", "@@ -1,1 +1,2 @@\n a\n+b\n", "a\nb\n"));
+        }
+        PullRequest pr = new PullRequest(2, "many small files", files);
+        AgentService agent = new AgentService(tools, new RuleBasedPlanner(3), 40);
+
+        ReviewResult result = agent.review(pr);
+
+        long checks = result.steps().stream().filter(s -> s.tool().equals("check_java_pitfalls")).count();
+        assertThat(checks).isEqualTo(3);
+        assertThat(result.summary()).contains("Skipped 2 lowest-risk file(s)");
     }
 
     @Test

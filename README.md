@@ -4,7 +4,7 @@ An AI agent that reviews Java pull requests. It decides which files look risky,
 investigates them with tools, and reports findings tied to exact lines, along with
 a step-by-step trace of everything it did.
 
-**Status: Step 2 of 6.** Spring Boot API + agent loop, reviewing the built-in demo pull request
+**Status: Step 3 of 6.** Spring Boot API + agent loop, reviewing the built-in demo pull request
 or any real public GitHub pull request. SageMaker, Lambda, S3, and DynamoDB come in later steps.
 
 ## Run it
@@ -70,6 +70,11 @@ source/   Where pull requests come from: built-in demo data, or the GitHub REST 
 model/    Plain data records
 ```
 
+The pitfall checker reads each diff's hunk headers (`@@ -8,3 +8,17 @@`) to work out exactly
+which lines the pull request added, and only reports issues on those lines. Rules: String `==`,
+null-unsafe `equals`, empty catch, overly broad catch, unclosed streams, `printStackTrace()`,
+and `System.out` logging.
+
 The planner only **proposes** actions. `AgentService` validates the tool name,
 runs it, records the result, and stops after `agent.max-steps`.
 
@@ -77,7 +82,7 @@ runs it, records the result, and stops after `agent.max-steps`.
 
 1. ✅ Spring Boot API + agent loop on demo data
 2. ✅ Read real pull requests from GitHub
-3. `run_tests` tool + more Java pitfall rules
+3. ✅ Flag only lines the PR added, 7 Java pitfall rules, budget-based file selection
 4. Replace the risk heuristic with a model on a SageMaker serverless endpoint
 5. Lambda webhook, S3 for diffs and reports, DynamoDB for reviews
 6. Evaluate on real historical bugs (Defects4J), demo video
